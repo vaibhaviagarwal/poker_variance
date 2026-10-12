@@ -87,12 +87,16 @@ def robust_kelly(
 ) -> tuple[float, float]:
     """Stake that maximises growth averaged over edge uncertainty.
 
-    Each bootstrap ROI draw is a plausible true edge. For every candidate
-    fraction, growth is computed under each draw and averaged. Because
-    log growth collapses quickly when an edge turns out smaller than
-    assumed, the averaged optimum sits well below the point-estimate
-    optimum — this is the formal reason "bet fractional Kelly" is good
-    advice rather than folklore.
+    Each draw is a plausible true edge. For every candidate fraction,
+    growth is computed under each draw and averaged.
+
+    Averaging alone does NOT reliably shrink the stake. When uncertainty
+    is symmetric around the estimate, the averaged optimum can sit
+    slightly above the point optimum (tests/test_kelly.py checks this
+    rather than assuming the opposite). What protects a player who ran
+    hot is shrinking the estimate toward the population first — see
+    shrink_roi and size_buyin. Averaging then accounts for the spread
+    that remains.
     """
     rng = np.random.default_rng(seed)
     draws = np.asarray(roi_draws, dtype=float)
@@ -102,11 +106,14 @@ def robust_kelly(
         grid = np.geomspace(1e-5, 0.5, 120)
 
     base = np.asarray(pool, dtype=float)
-    base_mean = base.mean()  # taken before subsampling, so scaling is exact
     if base.size > max_pool:
         # A random subsample keeps the payout shape; the tail is what
         # matters and 6,000 draws still contains several hundred cashes.
         base = rng.choice(base, size=max_pool, replace=False)
+    # Scale by the mean of the outcomes actually used. Scaling a subsample
+    # by the full pool's mean leaves its effective ROI off target by
+    # however far the subsample drifted (caught by test_kelly.py).
+    base_mean = base.mean()
     total = np.zeros(grid.size)
     for roi in draws:
         scaled = base * ((1.0 + roi) / base_mean)

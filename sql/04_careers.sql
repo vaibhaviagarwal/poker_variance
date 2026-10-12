@@ -9,13 +9,20 @@
 -- entered.
 
 -- Depth among the cashers: 0 = won the event, 1 = min-cashed.
+--
+-- Computed from each cash's rank among the cashers actually listed, not
+-- from the raw place number. 1,540 events skip a place (a finisher is
+-- missing from the source: 17 cashers listed, last one in 18th), and
+-- dividing raw place by the cash count pushed those depths above 1.
+-- Caught by tests/test_real_data.py::test_no_impossible_values.
 CREATE VIEW analysis.player_cashes AS
 SELECT
     c.player_id,
     c.event_id,
     s.year,
     c.multiple,
-    (c.place - 1)::numeric / nullif(t.cashers - 1, 0) AS depth,
+    (rank() OVER (PARTITION BY c.event_id ORDER BY c.place) - 1)::numeric
+        / nullif(t.cashers - 1, 0)                   AS depth,
     row_number() OVER (
         PARTITION BY c.player_id
         ORDER BY s.year, c.event_id

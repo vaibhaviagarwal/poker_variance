@@ -15,7 +15,6 @@ whole database can be rebuilt from scratch with one command.
 from __future__ import annotations
 
 import os
-import sys
 import time
 from pathlib import Path
 
@@ -23,14 +22,16 @@ import psycopg
 
 ROOT = Path(__file__).resolve().parent.parent
 SQL_DIR = ROOT / "sql"
-RAW = ROOT / "data" / "raw" / "unpacked" / "data" / "wsop.com"
+DEFAULT_RAW = ROOT / "data" / "raw" / "unpacked" / "data" / "wsop.com"
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql:///poker")
+RAW_DIR = Path(os.environ.get("POKER_RAW_DIR", DEFAULT_RAW))
 
+# table -> file name inside the raw directory
 RAW_FILES = {
-    "raw.wsop_results": RAW / "results.csv",
-    "raw.wsop_payouts": RAW / "payouts.csv",
-    "raw.wsop_metadata": RAW / "metadata.csv",
+    "raw.wsop_results": "results.csv",
+    "raw.wsop_payouts": "payouts.csv",
+    "raw.wsop_metadata": "metadata.csv",
 }
 
 
@@ -42,7 +43,9 @@ def run_sql(conn: psycopg.Connection, path: Path) -> None:
 
 def copy_csv(conn: psycopg.Connection, table: str, path: Path) -> int:
     if not path.exists():
-        sys.exit(f"missing {path} — unzip the dataset into data/raw/unpacked first")
+        raise FileNotFoundError(
+            f"missing {path} — unzip the dataset into data/raw/unpacked first"
+        )
     t0 = time.time()
     with conn.cursor() as cur:
         with cur.copy(f"COPY {table} FROM STDIN WITH (FORMAT csv, HEADER true)") as cp:
@@ -54,22 +57,30 @@ def copy_csv(conn: psycopg.Connection, table: str, path: Path) -> int:
     return n
 
 
+def build(conn: psycopg.Connection, raw_dir: Path) -> int:
+    """Rebuild every schema from the CSVs in raw_dir. Returns raw row count.
+
+    Separate from main() so the tests can build a small fixture database
+    with exactly the same code path the real load uses.
+    """
+    print("schema")
+    run_sql(conn, SQL_DIR / "01_schema.sql")
+
+    print("raw load")
+    counts = {t: copy_csv(conn, t, raw_dir / f) for t, f in RAW_FILES.items()}
+
+    print("transform + analysis views")
+    run_sql(conn, SQL_DIR / "02_transform.sql")
+    run_sql(conn, SQL_DIR / "03_analysis.sql")
+    for extra in sorted(SQL_DIR.glob("0[4-9]_*.sql")):
+        run_sql(conn, extra)
+    return counts["raw.wsop_results"]
+
+
 def main() -> None:
     print(f"connecting to {DATABASE_URL}")
     with psycopg.connect(DATABASE_URL) as conn:
-        print("schema")
-        run_sql(conn, SQL_DIR / "01_schema.sql")
-
-        print("raw load")
-        raw_rows = copy_csv(conn, "raw.wsop_results", RAW_FILES["raw.wsop_results"])
-        copy_csv(conn, "raw.wsop_payouts", RAW_FILES["raw.wsop_payouts"])
-        copy_csv(conn, "raw.wsop_metadata", RAW_FILES["raw.wsop_metadata"])
-
-        print("transform + analysis views")
-        run_sql(conn, SQL_DIR / "02_transform.sql")
-        run_sql(conn, SQL_DIR / "03_analysis.sql")
-        for extra in sorted(SQL_DIR.glob("0[4-9]_*.sql")):
-            run_sql(conn, extra)
+        raw_rows = build(conn, RAW_DIR)
 
         q = lambda s: conn.execute(s).fetchone()[0]
         kept = q("SELECT count(*) FROM core.results")

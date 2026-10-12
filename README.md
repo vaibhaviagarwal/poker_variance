@@ -1,5 +1,7 @@
 # Skill or luck? Tournament poker, measured like a fund
 
+[![tests](https://github.com/vaibhaviagarwal/poker_variance/actions/workflows/tests.yml/badge.svg)](https://github.com/vaibhaviagarwal/poker_variance/actions/workflows/tests.yml)
+
 How many tournaments does a winning player need before their results stop
 looking like a lucky player's? I rebuilt 1.6 million live World Series of
 Poker entries to find out. The answer is: longer than a career.
@@ -116,6 +118,35 @@ open reports/dashboard.html
 ```
 
 Set `DATABASE_URL` to use a database other than the local `poker`.
+
+## Tests
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
+
+51 tests in four groups:
+
+- **Statistics** (`test_kelly.py`, `test_variance.py`): Kelly sizing against
+  the textbook closed form for simple bets, the false-alarm rate on
+  break-even players, bootstrap interval coverage, Benjamini-Hochberg, and a
+  regression test for a two-sided detection bug that once reported
+  impossibly high power at small samples.
+- **SQL** (`test_sql.py`): parsing and reconstruction rules run against a
+  five-event fixture where every answer can be worked out by hand: the
+  "$10K" buy-in trap, one player spelled three ways, duplicate and junk
+  rows, and each exclusion reason.
+- **Real data** (`test_real_data.py`): row counts, no impossible values, and
+  the 2022-2024 Main Events reconstructed within 2% of their published
+  fields. Runs locally after `load.py`; skips in CI.
+- **CI** runs everything except the real-data checks on every push, against
+  a Postgres 16 container.
+
+Writing the tests found two real bugs. 1,540 events skip a place number in
+the source, which pushed some finishing depths above 1. And the robust Kelly
+routine scaled a subsample by the full pool's mean, which shifted its
+effective edge. Both are fixed, and the tests that caught them stay in.
 
 ## Data
 
