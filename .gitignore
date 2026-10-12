@@ -1,0 +1,10 @@
+# The dataset is 3.3 GB unpacked. Never commit it; README explains how to fetch it.
+data/raw/
+data/processed/*.npy
+data/processed/*.csv
+
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+.env
