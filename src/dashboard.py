@@ -85,8 +85,8 @@ def fetch(conn: psycopg.Connection) -> dict:
 
 # --- the hero chart -----------------------------------------------------
 
-W, H = 900, 420
-L, R, T, B = 64, 120, 30, 58
+W, H = 900, 450
+L, R, T, B = 64, 120, 30, 88
 
 
 def power_chart(sizes: list[int], curves: dict) -> str:
@@ -105,10 +105,12 @@ def power_chart(sizes: list[int], curves: dict) -> str:
     # Career band.
     out.append(f'<rect x="{x(CAREER_LO):.1f}" y="{T}" width="{x(CAREER_HI) - x(CAREER_LO):.1f}" '
                f'height="{ph}" rx="10" class="band"/>')
-    out.append(f'<text x="{(x(CAREER_LO) + x(CAREER_HI)) / 2:.1f}" y="{T + ph - 30}" '
-               f'class="band-t">a whole pro career</text>')
-    out.append(f'<text x="{(x(CAREER_LO) + x(CAREER_HI)) / 2:.1f}" y="{T + ph - 13}" '
-               f'class="band-s">10–30 years</text>')
+    # Labelled below the axis, not inside the band: every point inside the
+    # band has a curve passing through it, so any label there collides.
+    bx0, bx1, by = x(CAREER_LO), x(CAREER_HI), T + ph + 40
+    out.append(f'<path d="M{bx0:.1f},{by - 6} V{by} H{bx1:.1f} V{by - 6}" class="bracket"/>')
+    out.append(f'<text x="{(bx0 + bx1) / 2:.1f}" y="{by + 20}" class="band-t">'
+               f'a whole pro career, 10–30 years</text>')
 
     for p in (0, 0.25, 0.5, 0.75, 1.0):
         out.append(f'<line x1="{L}" x2="{W - R}" y1="{y(p):.1f}" y2="{y(p):.1f}" class="g"/>')
@@ -120,7 +122,7 @@ def power_chart(sizes: list[int], curves: dict) -> str:
     for n in sizes:
         lab = f"{n // 1000}k" if n >= 1000 else str(n)
         out.append(f'<text x="{x(n):.1f}" y="{H - B + 22}" class="xt">{lab}</text>')
-    out.append(f'<text x="{L + pw / 2:.1f}" y="{H - 12}" class="xl">'
+    out.append(f'<text x="{L}" y="{T + ph + 60}" class="xl" text-anchor="start">'
                f'tournaments played</text>')
 
     for i, (key, pts) in enumerate(curves.items()):
@@ -249,9 +251,10 @@ svg{width:100%;height:auto;display:block;overflow:visible}
 .yt,.xt{fill:var(--ink-3);font:700 12px Nunito,sans-serif}
 .yt{text-anchor:end} .xt{text-anchor:middle}
 .xs{fill:var(--ink-3);font:600 11px Nunito,sans-serif;text-anchor:middle}
-.xl{fill:var(--ink-2);font:700 13px Nunito,sans-serif;text-anchor:middle}
+.xl{fill:var(--ink-2);font:700 13px Nunito,sans-serif}
 .band{fill:var(--band)}
 .band-t{fill:#c98a14;font:600 14px Fredoka,sans-serif;text-anchor:middle}
+.bracket{fill:none;stroke:#e0a12f;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .band-s{fill:var(--ink-3);font:700 11.5px Nunito,sans-serif;text-anchor:middle}
 .target{stroke:var(--ink-3);stroke-width:1.5;stroke-dasharray:2 6;stroke-linecap:round}
 .target-t{fill:var(--ink-2);font:700 12px Nunito,sans-serif}
