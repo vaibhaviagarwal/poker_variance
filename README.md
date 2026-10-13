@@ -3,8 +3,9 @@
 [![tests](https://github.com/vaibhaviagarwal/poker_variance/actions/workflows/tests.yml/badge.svg)](https://github.com/vaibhaviagarwal/poker_variance/actions/workflows/tests.yml)
 
 How many tournaments does a winning player need before their results stop
-looking like a lucky player's? I rebuilt 1.6 million live World Series of
-Poker entries to find out. The answer is: longer than a career.
+looking like a lucky player's? From 699,211 published World Series of Poker
+cash results, I rebuilt the full fields of 2,338 live events (1.6 million
+entries, cashing or not) to find out. The answer is: longer than a career.
 
 ![dashboard](reports/dashboard.png)
 
@@ -20,7 +21,8 @@ inside 50,000 events.
 player's profit is knowable — but how deep a player runs when they do cash
 is observable. Splitting each player's cashes into alternating halves, depth
 in one half predicts depth in the other: r = 0.10 at 10+ cashes, rising to
-0.28 at 40+. With depths shuffled across players, the same test gives ~0.00.
+0.27 at 40+. With depths shuffled across players, the same test gives 0.03
+or less.
 
 **Both are true at once because the payouts are so top-heavy.** Only 15% of
 entries cash at all, the median cash is 2.2 buy-ins, and the top 1% of
@@ -51,11 +53,11 @@ ways and keep only the events where they agree:
 - from the prize pool: `entrants = prize_pool / (buy_in × 0.92)`
 - from places paid: `entrants = cashers / 0.15`
 
-| Check | Rebuilt | Actual |
-|---|---|---|
-| 2024 Main Event | 10,113 (from places paid) | 10,112 |
-| 2023 Main Event | 10,047 | 10,043 |
-| 2022 Main Event | 8,580 | 8,663 |
+| Check | Rebuilt | Actual | Off by |
+|---|---|---|---|
+| 2024 Main Event | 10,167 | 10,112 | 0.5% |
+| 2023 Main Event | 10,099 | 10,043 | 0.6% |
+| 2022 Main Event | 8,661 | 8,663 | 0.0% |
 
 2,338 of 9,958 events pass. With field sizes known, every non-cashing entry
 can be added back as a zero, which gives the real per-entry outcome
@@ -122,8 +124,8 @@ Set `DATABASE_URL` to use a database other than the local `poker`.
 ## Tests
 
 ```bash
-pip install -r requirements-dev.txt
-pytest
+python -m pip install -r requirements-dev.txt
+python -m pytest
 ```
 
 51 tests in four groups:

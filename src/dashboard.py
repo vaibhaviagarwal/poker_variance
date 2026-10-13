@@ -177,167 +177,186 @@ def skill_chart(split: list, shuffled: dict) -> str:
 
 
 CSS = """
-@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Jost:wght@400;500;600&family=Cormorant+Garamond:ital,wght@1,500&display=swap');
 
+/* Monte Carlo: green baize, brass trim, ivory cards. One look in both
+   colour schemes, because a casino table is a dark room by design. */
 :root{
-  color-scheme: light;
-  --bg:#fff3f5; --card:#ffffff; --card-2:#fff8f9;
-  --ink:#3a1d47; --ink-2:#6e5578; --ink-3:#a08aa8;
-  --line:#f4dbe3; --line-2:#ead0da;
-  --plum:#893894; --rose:#d4588f; --coral:#f37f4c; --butter:#f8bd57;
-  --e1:#5e2370; --e2:#b03a7c; --e3:#e4683f; --e4:#e8a52c;
-  --band:rgba(248,189,87,.18); --shadow:0 1px 0 rgba(137,56,148,.06), 0 14px 34px -18px rgba(137,56,148,.32);
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    color-scheme: dark;
-    --bg:#1b0f22; --card:#24152c; --card-2:#2b1a34;
-    --ink:#f8ecf4; --ink-2:#cdb5d4; --ink-3:#927a9c;
-    --line:#3a2644; --line-2:#46304f;
-    --e1:#8a46aa; --e2:#d95c96; --e3:#f3875a; --e4:#f7c85a;
-    --band:rgba(248,189,87,.10); --shadow:0 14px 34px -20px rgba(0,0,0,.7);
-  }
-}
-:root[data-theme="dark"]{
   color-scheme: dark;
-  --bg:#1b0f22; --card:#24152c; --card-2:#2b1a34;
-  --ink:#f8ecf4; --ink-2:#cdb5d4; --ink-3:#927a9c;
-  --line:#3a2644; --line-2:#46304f;
-  --e1:#8a46aa; --e2:#d95c96; --e3:#f3875a; --e4:#f7c85a;
-  --band:rgba(248,189,87,.10); --shadow:0 14px 34px -20px rgba(0,0,0,.7);
+  --felt:#0e3a2c; --felt-2:#124634; --felt-3:#18553f; --felt-deep:#082519;
+  --gold:#d4b062; --gold-2:#efd48e; --gold-dim:rgba(212,176,98,.42);
+  --ivory:#f4ecd6; --card-ink:#1e1a14; --card-red:#a5252b;
+  --ink:#f3ead2; --ink-2:#c8c0a6; --ink-3:#8fa597;
+  --e1:#e4545a; --e2:#e8963a; --e3:#efcb62; --e4:#f6eed6;
+  /* names kept from the previous theme, remapped */
+  --rose:var(--gold); --line:rgba(239,212,142,.13); --line-2:#2a6a52;
+  --card:var(--felt-2); --card-2:var(--felt-deep);
+  --plum:var(--gold-2); --coral:var(--e2);
 }
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--ink);
-  font:400 16px/1.6 Nunito,ui-rounded,"SF Pro Rounded",system-ui,sans-serif}
-.wrap{max-width:1040px;margin:0 auto;padding:40px 20px 80px}
-h1,h2,h3,.num{font-family:Fredoka,ui-rounded,"SF Pro Rounded",system-ui,sans-serif}
+body{margin:0;color:var(--ink);
+  font:400 16.5px/1.62 Jost,"Futura","Avenir Next",system-ui,sans-serif;
+  background:
+    radial-gradient(ellipse 120% 80% at 50% 0%, #165c45 0%, transparent 60%),
+    radial-gradient(ellipse at 50% 120%, #0a2c20 0%, transparent 55%),
+    var(--felt);
+  background-attachment:fixed;
+}
+/* baize grain */
+body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.07;
+  background-image:repeating-linear-gradient(45deg,#000 0 1px,transparent 1px 3px),
+                   repeating-linear-gradient(-45deg,#000 0 1px,transparent 1px 3px)}
+.wrap{max-width:1060px;margin:0 auto;padding:38px 20px 80px;position:relative}
+h1,h2,h3{font-family:Cinzel,"Trajan Pro",Georgia,serif;font-weight:600;color:var(--gold-2)}
+.num,.big,.figure{font-family:Cinzel,Georgia,serif}
 
-/* header */
-.hello{text-align:center;padding:26px 0 8px}
-.suits{display:inline-flex;gap:10px;font-size:20px;margin-bottom:14px}
-.suits span:nth-child(odd){color:var(--plum)}
-.suits span:nth-child(even){color:var(--rose)}
-h1{font-weight:700;font-size:clamp(38px,6.4vw,64px);line-height:1.02;
-   letter-spacing:-.02em;margin:0 0 14px}
+/* ---- the marquee ---- */
+.hello{position:relative;text-align:center;padding:54px 30px 46px;margin-bottom:38px;
+  border:1px solid var(--gold-dim);outline:1px solid var(--gold-dim);outline-offset:6px;
+  overflow:hidden;isolation:isolate}
+.hello::before{content:"";position:absolute;left:50%;top:100%;width:1400px;height:1400px;
+  transform:translate(-50%,-50%);z-index:-1;opacity:.55;
+  background:repeating-conic-gradient(from 0deg,rgba(212,176,98,.20) 0deg 3deg,transparent 3deg 12deg);
+  -webkit-mask:radial-gradient(circle,#000 0 28%,transparent 62%);
+          mask:radial-gradient(circle,#000 0 28%,transparent 62%)}
+.hello::after{content:"";position:absolute;inset:0;z-index:-2;
+  background:radial-gradient(ellipse at 50% 100%,rgba(239,212,142,.10),transparent 65%)}
+.suits{display:inline-flex;gap:18px;font-size:19px;margin-bottom:18px;color:var(--gold)}
+.suits span:nth-child(even){color:#d4555a}
+h1{font-weight:700;font-size:clamp(40px,7vw,76px);line-height:1;letter-spacing:.06em;
+  margin:0 0 6px;text-transform:uppercase;
+  background:linear-gradient(180deg,#fbeec3 0%,#e2bf6c 48%,#b88a35 52%,#e8cd84 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 2px 0 rgba(0,0,0,.35))}
+.rule{display:flex;align-items:center;justify-content:center;gap:14px;margin:18px auto 22px;
+  color:var(--gold);max-width:340px}
+.rule::before,.rule::after{content:"";flex:1;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold))}
+.rule::after{transform:scaleX(-1)}
 .lede{max-width:58ch;margin:0 auto;color:var(--ink-2);font-size:18px}
+.lede em{font:italic 500 21px/1.4 "Cormorant Garamond",Georgia,serif;color:var(--ink)}
 
-/* chips */
-.chips{display:flex;flex-wrap:wrap;justify-content:center;gap:22px;margin:38px 0 46px}
-.chip{width:156px;height:156px;border-radius:50%;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;text-align:center;position:relative;
-  background:var(--card);box-shadow:var(--shadow)}
-.chip::before{content:"";position:absolute;inset:7px;border-radius:50%;
-  border:4px dashed var(--c);opacity:.85}
-.chip::after{content:"";position:absolute;inset:20px;border-radius:50%;
-  border:1.5px solid var(--line-2)}
-.chip .num{font-size:31px;font-weight:600;line-height:1;color:var(--c);position:relative;z-index:1}
-.chip .cap{font-size:12.5px;line-height:1.25;color:var(--ink-2);margin-top:6px;
-  max-width:96px;position:relative;z-index:1;font-weight:700}
-.chip:nth-child(1){--c:var(--plum)} .chip:nth-child(2){--c:var(--rose)}
-.chip:nth-child(3){--c:var(--coral)} .chip:nth-child(4){--c:#d99a1e}
+/* ---- the deal: ivory playing cards ---- */
+.hand{display:flex;flex-wrap:wrap;justify-content:center;gap:22px;margin:0 0 46px}
+.pc-card{position:relative;width:170px;height:238px;border-radius:12px;
+  background:linear-gradient(160deg,#fbf5e4,var(--ivory) 55%,#e9dfc3);
+  color:var(--card-ink);box-shadow:0 1px 0 #fff inset,0 18px 30px -14px rgba(0,0,0,.65),
+  0 0 0 1px rgba(0,0,0,.25);display:flex;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center;padding:0 18px}
+.pc-card::before{content:"";position:absolute;inset:9px;border-radius:7px;
+  border:1px solid rgba(30,26,20,.18)}
+.pc-card:nth-child(1){transform:rotate(-4deg)} .pc-card:nth-child(2){transform:rotate(-1.3deg) translateY(-6px)}
+.pc-card:nth-child(3){transform:rotate(1.3deg) translateY(-6px)} .pc-card:nth-child(4){transform:rotate(4deg)}
+.pc-card.red{color:var(--card-red)}
+.idx{position:absolute;font:700 17px/0.95 Cinzel,Georgia,serif;text-align:center}
+.idx i{display:block;font-style:normal;font-size:16px;margin-top:2px}
+.idx.tl{top:14px;left:13px} .idx.br{bottom:14px;right:13px;transform:rotate(180deg)}
+.pc-card .num{font-size:37px;font-weight:700;line-height:1;letter-spacing:-.01em}
+.pc-card .cap{font:500 13px/1.3 Jost,sans-serif;color:#5a5245;margin-top:10px;max-width:110px}
+.pc-card .pip{font-size:24px;line-height:1;margin-bottom:8px;opacity:.9}
 
-/* cards */
-.card{background:var(--card);border-radius:26px;padding:30px 32px;margin:0 0 22px;
-  box-shadow:var(--shadow)}
-.card h2{font-weight:600;font-size:27px;line-height:1.15;margin:0 0 8px;letter-spacing:-.01em}
-.card > p{color:var(--ink-2);margin:0 0 18px;max-width:66ch}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+/* ---- tables (sections) ---- */
+.card{position:relative;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(0,0,0,.08)),var(--felt-2);
+  border:1px solid var(--gold-dim);border-radius:4px;padding:32px 34px;margin:0 0 24px;
+  box-shadow:0 0 0 4px var(--felt-deep),0 0 0 5px var(--gold-dim),0 22px 40px -24px rgba(0,0,0,.8)}
+.card::before,.card::after{content:"◆";position:absolute;top:-9px;font-size:12px;color:var(--gold);
+  background:var(--felt);padding:0 6px;line-height:16px}
+.card::before{left:22px} .card::after{right:22px}
+.card h2{font-size:24px;line-height:1.2;margin:0 0 10px;letter-spacing:.03em}
+.card > p{color:var(--ink-2);margin:0 0 20px;max-width:66ch}
+.card > p b{color:var(--gold-2);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
 .grid2 .card{margin:0}
 
-/* charts */
+/* ---- charts on the baize ---- */
 svg{width:100%;height:auto;display:block;overflow:visible}
-.g{stroke:var(--line);stroke-width:1}
-.yt,.xt{fill:var(--ink-3);font:700 12px Nunito,sans-serif}
+.g{stroke:rgba(239,212,142,.10);stroke-width:1}
+.yt,.xt{fill:var(--ink-3);font:500 12px Jost,sans-serif}
 .yt{text-anchor:end} .xt{text-anchor:middle}
-.xs{fill:var(--ink-3);font:600 11px Nunito,sans-serif;text-anchor:middle}
-.xl{fill:var(--ink-2);font:700 13px Nunito,sans-serif}
-.band{fill:var(--band)}
-.band-t{fill:#c98a14;font:600 14px Fredoka,sans-serif;text-anchor:middle}
-.bracket{fill:none;stroke:#e0a12f;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.band-s{fill:var(--ink-3);font:700 11.5px Nunito,sans-serif;text-anchor:middle}
-.target{stroke:var(--ink-3);stroke-width:1.5;stroke-dasharray:2 6;stroke-linecap:round}
-.target-t{fill:var(--ink-2);font:700 12px Nunito,sans-serif}
-.ln{fill:none;stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round;
-  stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1.1s ease-out forwards}
+.xs{fill:var(--ink-3);font:400 11px Jost,sans-serif;text-anchor:middle}
+.xl{fill:var(--ink-2);font:500 13px Jost,sans-serif;letter-spacing:.04em}
+.band{fill:rgba(212,176,98,.10)}
+.band-t{fill:var(--gold);font:600 13px Cinzel,serif;text-anchor:middle;letter-spacing:.06em}
+.bracket{fill:none;stroke:var(--gold);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.target{stroke:var(--gold-dim);stroke-width:1.2;stroke-dasharray:1 6;stroke-linecap:round}
+.target-t{fill:var(--gold);font:500 12px Jost,sans-serif}
+.ln{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;
+  stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1.2s ease-out forwards;
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}
 @keyframes draw{to{stroke-dashoffset:0}}
 @media (prefers-reduced-motion:reduce){.ln{animation:none;stroke-dashoffset:0}}
-.pt{stroke:var(--card);stroke-width:2.5;cursor:pointer;transition:r .12s}
+.pt{stroke:var(--felt-2);stroke-width:2.5;cursor:pointer;transition:r .12s}
 .pt:hover{r:7}
-.lab{font:600 14px Fredoka,sans-serif}
+.lab{font:600 13.5px Cinzel,serif;letter-spacing:.02em}
 .e1{stroke:var(--e1);fill:var(--e1)} .e2{stroke:var(--e2);fill:var(--e2)}
 .e3{stroke:var(--e3);fill:var(--e3)} .e4{stroke:var(--e4);fill:var(--e4)}
 .ln.e1,.ln.e2,.ln.e3,.ln.e4{fill:none}
 .lab.e1,.lab.e2,.lab.e3,.lab.e4{stroke:none}
-.bar-real{fill:var(--rose);cursor:pointer} .bar-shuf{fill:var(--line-2);cursor:pointer}
-.bv{fill:var(--ink);font:600 12.5px Fredoka,sans-serif;text-anchor:middle}
+.bar-real{fill:var(--gold);cursor:pointer} .bar-shuf{fill:#2f7259;cursor:pointer}
+.bv{fill:var(--ink);font:600 12.5px Cinzel,serif;text-anchor:middle}
 .bv-s{fill:var(--ink-3)}
-.key{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;font-size:13.5px;
-  color:var(--ink-2);font-weight:700}
-.key i{display:inline-block;width:14px;height:14px;border-radius:5px;
-  margin-right:7px;vertical-align:-2px}
-
-.tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--card);
-  font:700 13px Nunito,sans-serif;padding:7px 12px;border-radius:12px;
-  opacity:0;transform:translate(-50%,calc(-100% - 12px));transition:opacity .1s;z-index:9;
-  white-space:nowrap}
+.key{display:flex;gap:20px;flex-wrap:wrap;margin-top:14px;font-size:13.5px;color:var(--ink-2)}
+.key i{display:inline-block;width:14px;height:14px;border-radius:2px;margin-right:8px;vertical-align:-2px}
+.tip{position:fixed;pointer-events:none;background:var(--ivory);color:var(--card-ink);
+  font:500 13px Jost,sans-serif;padding:7px 12px;border-radius:4px;box-shadow:0 8px 20px rgba(0,0,0,.45);
+  opacity:0;transform:translate(-50%,calc(-100% - 12px));transition:opacity .1s;z-index:9;white-space:nowrap}
 .tip.on{opacity:1}
 
-/* big facts */
+/* ---- facts ---- */
 .fact{display:flex;gap:20px;align-items:flex-start}
-.fact .num{flex:0 0 auto;font-size:44px;font-weight:600;line-height:1;color:var(--rose)}
-.fact h3{font-size:20px;font-weight:600;margin:4px 0 6px;line-height:1.2}
+.fact .num{flex:0 0 auto;font-size:40px;font-weight:700;line-height:1;color:var(--gold-2);min-width:88px}
+.fact h3{font-size:17px;margin:4px 0 6px;line-height:1.25;letter-spacing:.02em}
 .fact p{margin:0;color:var(--ink-2);font-size:15px}
-.shares{display:flex;flex-direction:column;gap:10px;margin-top:18px}
-.share{display:grid;grid-template-columns:118px 1fr 52px;gap:12px;align-items:center;
-  font-size:14px;color:var(--ink-2);font-weight:700}
-.share .track{height:14px;background:var(--card-2);border-radius:99px;overflow:hidden;
-  box-shadow:inset 0 0 0 1px var(--line)}
-.share .fill{height:100%;border-radius:99px;
-  background:linear-gradient(90deg,var(--plum),var(--rose),var(--coral))}
-.share b{color:var(--ink);text-align:right;font-family:Fredoka,sans-serif;font-weight:600}
+.shares{display:flex;flex-direction:column;gap:11px;margin-top:20px}
+.share{display:grid;grid-template-columns:128px 1fr 50px;gap:12px;align-items:center;font-size:14px;color:var(--ink-2)}
+.share .track{height:10px;background:var(--felt-deep);border-radius:1px;box-shadow:inset 0 0 0 1px var(--gold-dim)}
+.share .fill{height:100%;background:linear-gradient(90deg,#9c7429,var(--gold),var(--gold-2))}
+.share b{color:var(--gold-2);text-align:right;font:600 15px Cinzel,serif}
 
-/* calculator */
-.calc{display:grid;grid-template-columns:1.05fr 1fr;gap:28px;align-items:start}
-.field{margin-bottom:20px}
-.field label{display:flex;justify-content:space-between;font-weight:800;font-size:14.5px;
-  margin-bottom:8px}
-.field label output{font-family:Fredoka,sans-serif;font-weight:600;color:var(--plum);font-size:16px}
-input[type=range]{width:100%;accent-color:var(--rose);height:22px}
-.hint{font-size:12.5px;color:var(--ink-3);margin-top:3px;font-weight:600}
-.answer{background:var(--card-2);border-radius:22px;padding:24px;text-align:center;
-  box-shadow:inset 0 0 0 1.5px var(--line)}
-.answer .lbl{font-weight:800;color:var(--ink-2);font-size:13.5px}
-.answer .big{font-family:Fredoka,sans-serif;font-size:50px;font-weight:600;
-  color:var(--plum);line-height:1.05;margin:6px 0 2px}
-.answer .sub{color:var(--ink-2);font-size:14px;font-weight:700}
-.answer hr{border:0;border-top:1.5px dashed var(--line-2);margin:18px 0}
+/* ---- the cashier's window ---- */
+.calc{display:grid;grid-template-columns:1.05fr 1fr;gap:30px;align-items:start}
+.field{margin-bottom:22px}
+.field label{display:flex;justify-content:space-between;font-weight:500;font-size:15px;margin-bottom:9px;letter-spacing:.02em}
+.field label output{font:600 16px Cinzel,serif;color:var(--gold-2)}
+input[type=range]{width:100%;accent-color:var(--gold);height:22px}
+.hint{font-size:12.5px;color:var(--ink-3);margin-top:3px}
+.answer{position:relative;background:linear-gradient(160deg,#fbf5e4,var(--ivory) 60%,#ebe1c6);color:var(--card-ink);
+  border-radius:10px;padding:26px 24px;text-align:center;box-shadow:0 18px 32px -16px rgba(0,0,0,.7)}
+.answer::before{content:"";position:absolute;inset:8px;border:1px solid rgba(30,26,20,.16);border-radius:6px;pointer-events:none}
+.answer .lbl{font:600 12.5px Cinzel,serif;color:#6b604e;letter-spacing:.14em}
+.answer .big{font-size:52px;font-weight:700;color:var(--card-red);line-height:1.05;margin:8px 0 4px}
+.answer .sub{color:#5a5245;font-size:14px}
+.answer hr{border:0;border-top:1px dashed rgba(30,26,20,.25);margin:18px 0}
 .vs{display:flex;justify-content:space-around;gap:10px}
-.vs div{font-size:13px;color:var(--ink-3);font-weight:700}
-.vs b{display:block;font-family:Fredoka,sans-serif;font-size:21px;font-weight:600;color:var(--ink)}
-.verdict{margin-top:16px;font-size:14.5px;font-weight:700;color:var(--ink);
-  background:var(--card);border-radius:14px;padding:12px 14px;text-align:left}
+.vs div{font-size:12.5px;color:#7b705d;line-height:1.35}
+.vs b{display:block;font:700 20px Cinzel,serif;color:var(--card-ink);margin-top:4px}
+.verdict{margin-top:16px;font:italic 500 17px/1.45 "Cormorant Garamond",Georgia,serif;color:var(--card-ink);
+  text-align:left;padding:2px 4px}
 
-/* method */
-.method{display:grid;grid-template-columns:1fr 1fr;gap:26px}
-.method h3{font-size:18px;font-weight:600;margin:0 0 8px}
+/* ---- the house rules ---- */
+.method{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.method h3{font-size:16px;margin:0 0 8px;letter-spacing:.03em}
 .method p,.method li{color:var(--ink-2);font-size:14.5px}
 .method ul{margin:0;padding-left:18px}
-table{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px}
-th{text-align:left;color:var(--ink-3);font-weight:800;font-size:12px;padding:0 8px 8px 0}
-td{padding:7px 8px 7px 0;border-top:1.5px solid var(--line);font-weight:700}
-td.n{font-family:Fredoka,sans-serif;font-weight:500;font-variant-numeric:tabular-nums}
-.ok{color:var(--rose)}
-footer{text-align:center;color:var(--ink-3);font-size:13px;margin-top:34px;font-weight:600}
-footer a{color:var(--ink-2)}
+.method li::marker{color:var(--gold)}
+table{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}
+th{text-align:left;color:var(--gold);font:600 11.5px Cinzel,serif;letter-spacing:.08em;padding:0 8px 9px 0;border-bottom:1px solid var(--gold-dim)}
+td{padding:8px 8px 8px 0;border-bottom:1px solid var(--line)}
+td.n{font-variant-numeric:tabular-nums}
+.ok{color:var(--gold-2)}
+code{font-family:ui-monospace,Menlo,monospace;font-size:.9em;color:var(--gold-2)}
+footer{text-align:center;color:var(--ink-3);font-size:13px;margin-top:36px}
+footer a{color:var(--gold)}
 
-:focus-visible{outline:3px solid var(--coral);outline-offset:3px;border-radius:6px}
+:focus-visible{outline:2px solid var(--gold-2);outline-offset:3px}
 
 @media (max-width:780px){
   .grid2,.calc,.method{grid-template-columns:1fr}
-  .card{padding:24px 20px;border-radius:22px}
-  .chip{width:136px;height:136px} .chip .num{font-size:26px}
-  .fact .num{font-size:36px}
+  .card{padding:26px 20px}
+  .hello{padding:40px 18px 34px}
+  .pc-card{width:148px;height:208px} .pc-card .num{font-size:31px}
+  .pc-card:nth-child(n){transform:none}
 }
 """
 
@@ -482,16 +501,25 @@ def main() -> None:
   <header class="hello">
     <div class="suits" aria-hidden="true"><span>♠</span><span>♥</span><span>♣</span><span>♦</span></div>
     <h1>Skill or luck?</h1>
+    <div class="rule" aria-hidden="true">◆</div>
     <p class="lede">I rebuilt {d["entries"]:,} World Series of Poker tournament entries
     to find out how long it takes for a good player's results to stop looking
-    like a lucky one's. The answer is: longer than a career.</p>
+    like a lucky one's. <em>The answer: longer than a career.</em></p>
   </header>
 
-  <div class="chips">
-    <div class="chip"><span class="num">{d["entries"] / 1e6:.1f}M</span><span class="cap">entries rebuilt</span></div>
-    <div class="chip"><span class="num">{d["cash_rate"]:.0%}</span><span class="cap">of entries win anything</span></div>
-    <div class="chip"><span class="num">{d["top1"]:.0%}</span><span class="cap">of the money goes to the top 1%</span></div>
-    <div class="chip"><span class="num">{d["max_mult"]:,.0f}×</span><span class="cap">biggest single result</span></div>
+  <div class="hand">
+    <div class="pc-card"><span class="idx tl">A<i>♠</i></span><span class="pip">♠</span>
+      <span class="num">{d["entries"] / 1e6:.1f}M</span><span class="cap">entries rebuilt</span>
+      <span class="idx br">A<i>♠</i></span></div>
+    <div class="pc-card red"><span class="idx tl">K<i>♥</i></span><span class="pip">♥</span>
+      <span class="num">{d["cash_rate"]:.0%}</span><span class="cap">of entries win anything</span>
+      <span class="idx br">K<i>♥</i></span></div>
+    <div class="pc-card red"><span class="idx tl">Q<i>♦</i></span><span class="pip">♦</span>
+      <span class="num">{d["top1"]:.0%}</span><span class="cap">of the money goes to the top 1%</span>
+      <span class="idx br">Q<i>♦</i></span></div>
+    <div class="pc-card"><span class="idx tl">J<i>♣</i></span><span class="pip">♣</span>
+      <span class="num">{d["max_mult"]:,.0f}×</span><span class="cap">biggest single result</span>
+      <span class="idx br">J<i>♣</i></span></div>
   </div>
 
   <section class="card">
